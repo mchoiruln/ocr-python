@@ -14,6 +14,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
+      - mysql
 
   worker:
     build: ./project
@@ -27,6 +28,7 @@ services:
     depends_on:
       - web
       - redis
+      - mysql
 
   dashboard:
     build: ./project
@@ -51,10 +53,12 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./machine_learning_mysql:/var/lib/mysql
+      - db_data:/var/lib/mysql
 
   redis:
     image: redis:7
     ports:
       - 6379:6379
 
+volumes:
+  db_data:

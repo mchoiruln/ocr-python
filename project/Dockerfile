@@ -1,6 +1,9 @@
 # pull official base image
 FROM python:3.11.2-slim-buster
 
+RUN apt-get update && \
+  apt-get install -y tesseract-ocr tesseract-ocr-jpn poppler-utils
+
 # set work directory
 WORKDIR /usr/src/app
 

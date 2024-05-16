@@ -7,10 +7,18 @@ from worker import create_task, get_product_recommendation
 import asyncio
 import websockets
 
+from fastapi import FastAPI, File, UploadFile
+import shutil
+from pathlib import Path
+
+from routers import tesserract
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads/ocr", StaticFiles(directory="uploads/ocr"), name="uploads")
 templates = Jinja2Templates(directory="templates")
 
+app.include_router(tesserract.router)
 
 
 @app.get("/")
@@ -64,3 +72,16 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
         await websocket.close()
     else:
         await websocket.send_text(result.state)
+
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile | None = None):
+    if not file:
+        return {"message": "No upload file sent"}
+    else:
+        file_location = UPLOAD_DIR / file.filename
+        with file_location.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"info": f"file '{file.filename}' saved at '{file_location}'"}
