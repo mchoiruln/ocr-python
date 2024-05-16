@@ -1,6 +1,4 @@
-# Asynchronous Tasks with FastAPI and Celery
-
-Example of how to handle background processes with FastAPI, Celery, and Docker.
+# OCR Project
 
 ### Quick Start
 

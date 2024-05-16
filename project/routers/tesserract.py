@@ -8,6 +8,9 @@ from fastapi.responses import FileResponse
 import io
 import pytesseract
 
+UPLOAD_DIR = Path("uploads/ocr")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
 router = APIRouter()
 
 @router.get("/tesseract/", tags=["tesseract"])
@@ -19,25 +22,13 @@ def image_to_text(image, lang='eng'):
     return text
 
 @router.post("/tesseract/image-to-string", tags=["tesseract"])
-async def test_tesseract():
-    DATA_DIR = Path("tests/data")
-    # image_path = DATA_DIR / 'test-european.jpg'
-    image_path = DATA_DIR / 'appbox.jpg'
-
+async def image_to_string(image_file: UploadFile = File(...)):
     try:
-        # Open the image file
-        img = Image.open(image_path)
+        image_content = await image_file.read()
+        img = Image.open(io.BytesIO(image_content))
+        result_text = image_to_text(img, lang='jpn')
 
-        result = pytesseract.image_to_string(img, lang = 'jpn')
-
-        pdf = pytesseract.image_to_pdf_or_hocr(img, extension='pdf', lang = 'jpn')
-        pdf_path = image_path.with_suffix('.pdf')
-        with open(pdf_path, 'w+b') as f:
-            f.write(pdf)
-
-        return {'result': result}
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Image file not found")
+        return {'result': result_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -64,9 +55,6 @@ async def pdf_to_text(pdf_file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-UPLOAD_DIR = Path("uploads/ocr")
-UPLOAD_DIR.mkdir(exist_ok=True)
 
 @router.post("/tesseract/pdf-to-ocr", tags=["tesseract"])
 async def pdf_to_ocrpdf(pdf_file: UploadFile = File(...)):

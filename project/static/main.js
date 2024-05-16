@@ -1,47 +1,68 @@
-// custom javascript
+function handleUpload() {
+  const fileInput = document.getElementById('pdfFile');
+  const uploadBtn = document.getElementById('upload-button');
+  uploadBtn.setAttribute('disabled', 'disabled');
 
-(function() {
-  console.log('Sanity Check!');
-})();
+  const anchorResult = document.getElementById('link-result');
+  anchorResult.classList.add('disabled');
+  anchorResult.href = '';
 
-function handleClick(type) {
-  fetch('/tasks', {
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert('Please select a PDF file to upload.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('pdf_file', file);
+
+  fetch('/tesseract/pdf-to-ocr', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ type: type }),
+    body: formData,
   })
-  .then(response => response.json())
-  .then(data => {
-    getStatus(data.task_id)
-  })
-}
+    .then(async (response) => {
+      if (response.ok) {
+        const res = await response.json();
 
-function getStatus(taskID) {
-  fetch(`/tasks/${taskID}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-  })
-  .then(response => response.json())
-  .then(res => {
-    console.log(res)
-    const html = `
-      <tr>
-        <td>${taskID}</td>
-        <td>${res.task_status}</td>
-        <td>${res.task_result}</td>
-      </tr>`;
-    const newRow = document.getElementById('tasks').insertRow(0);
-    newRow.innerHTML = html;
+        anchorResult.href = res.document;
+        anchorResult.classList.remove('disabled');
+      } else {
+        throw new Error('Failed to upload file.');
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      alert('Failed to upload file.');
+    });
 
-    const taskStatus = res.task_status;
-    if (taskStatus === 'SUCCESS' || taskStatus === 'FAILURE') return false;
-    setTimeout(function() {
-      getStatus(res.task_id);
-    }, 1000);
+  const resultarea = document.getElementById('resultarea');
+  resultarea.value = 'extracting text from pdf ...';
+
+  fetch('/tesseract/pdf-to-text', {
+    method: 'POST',
+    body: formData,
   })
-  .catch(err => console.log(err));
+    .then(async (response) => {
+      if (response.ok) {
+        console.log('File uploaded successfully!');
+        // Lakukan tindakan selanjutnya setelah pengunggahan selesai
+        const res = await response.json();
+
+        if (Array.isArray(res.extracted_text)) {
+          resultarea.value = res.extracted_text.join();
+        } else {
+          resultarea.value = res.extracted_text;
+        }
+      } else {
+        throw new Error('Failed to upload file.');
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      resultarea.value = 'error: unable to extracting text from pdf';
+    })
+    .finally(() => {
+      uploadBtn.removeAttribute('disabled');
+    });
 }
