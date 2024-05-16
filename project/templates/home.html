@@ -7,20 +7,20 @@
     <form id="uploadForm" enctype="multipart/form-data">
       <div class="form-group">
         <label for="pdfFile">Upload a PDF here:</label>
-        <input
-          type="file"
-          class="form-control-file"
-          id="pdfFile"
-          accept=".pdf"
-          required
-        />
+        <input type="file" id="pdfFile" accept=".pdf" required />
         <button
           id="upload-button"
           type="button"
           class="btn btn-primary"
+          type="button"
+          class="btn btn-primary"
           onclick="handleUpload()"
         >
-          Upload
+          <span
+            class="visually-hidden spinner-grow spinner-grow-sm"
+            aria-hidden="true"
+          ></span>
+          <span role="status">Upload</span>
         </button>
       </div>
     </form>

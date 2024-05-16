@@ -1,9 +1,18 @@
-function handleUpload() {
-  const fileInput = document.getElementById('pdfFile');
-  const uploadBtn = document.getElementById('upload-button');
-  uploadBtn.setAttribute('disabled', 'disabled');
+const fileInput = document.getElementById('pdfFile');
+const uploadBtn = document.getElementById('upload-button');
+const anchorResult = document.getElementById('link-result');
 
-  const anchorResult = document.getElementById('link-result');
+function resetState() {
+  uploadBtn.removeAttribute('disabled');
+  uploadBtn.querySelector('.spinner-grow').classList.add('visually-hidden');
+  uploadBtn.querySelector('[role="status"]').value = 'Upload';
+}
+
+function handleUpload() {
+  uploadBtn.setAttribute('disabled', 'disabled');
+  uploadBtn.querySelector('.spinner-grow').classList.remove('visually-hidden');
+  uploadBtn.querySelector('[role="status"]').value = 'Uploading...';
+
   anchorResult.classList.add('disabled');
   anchorResult.href = '';
 
@@ -11,6 +20,7 @@ function handleUpload() {
 
   if (!file) {
     alert('Please select a PDF file to upload.');
+    resetState();
     return;
   }
 
@@ -64,5 +74,7 @@ function handleUpload() {
     })
     .finally(() => {
       uploadBtn.removeAttribute('disabled');
+      uploadBtn.querySelector('.spinner-grow').classList.add('visually-hidden');
+      uploadBtn.querySelector('[role="status"]').value = 'Upload';
     });
 }
